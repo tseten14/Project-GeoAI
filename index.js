@@ -8,18 +8,14 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var ex_session = require('express-session');
 var methodOverride = require('method-override');
-var bcrypt = require("bcrypt");
+var bcrypt = require("bcryptjs"); // use pure JS implementation to avoid native module deprecation warnings
 var pug= require('pug');
 
 
-var username = "cmps369";
-var password = "finalproject";
-bcrypt.genSalt(10, function(err, salt) {
-    bcrypt.hash(password, salt, function(err, hash) {
-        password = hash;
-        //console.log("Hashed password = " + password);
-    });
-});
+var username = "sherpa_14";
+var password = "geocode";
+// Hash synchronously so password is ready before any login request (avoids race with async hash)
+password = bcrypt.hashSync(password, 10);
 
 
 
@@ -38,7 +34,12 @@ app.set('view engine', 'pug');
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(methodOverride());
     app.use(cookieParser());
-    app.use(ex_session( { secret : 'cmps369'}));
+    // express-session needs explicit resave/saveUninitialized flags to silence deprecation warnings
+    app.use(ex_session({
+      secret: 'cmps369',
+      resave: false,
+      saveUninitialized: false
+    }));
     app.use(express.static(path.join(__dirname, 'public')));
 
 
@@ -107,8 +108,9 @@ routes.get('/login_fail', function (req, res) {
 });
 
 routes.get('/logout', function (req, res) {
-  req.logout();
-  res.redirect('/login');
+  req.logout(function (err) {
+    res.redirect('/login');
+  });
 });
 
 app.use('/', routes);
@@ -165,18 +167,17 @@ module.exports = app;
  app.set('port', port);
  
  /**
-  * Create HTTP server.
+  * Create HTTP server and listen after DB is ready.
   */
- 
  var server = http.createServer(app);
- 
- /**
-  * Listen on provided port, on all network interfaces.
-  */
- 
- server.listen(port);
- server.on('error', onError);
- server.on('listening', onListening);
+ var hostname = '127.0.0.1';
+
+ (async function () {
+   await routes.dbReady;
+   server.listen(port, hostname);
+   server.on('error', onError);
+   server.on('listening', onListening);
+ })();
  
  /**
   * Normalize a port into a number, string, or false.

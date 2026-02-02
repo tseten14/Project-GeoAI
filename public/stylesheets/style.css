@@ -7,6 +7,11 @@
   margin-bottom: 1em;
 }
 
+/* Contact rows are clickable to center map on address */
+tr.tablerow {
+  cursor: pointer;
+}
+
 .inputfornames{
    margin-right: 20em;
 }
@@ -16,11 +21,11 @@
 }
 
 #mapid{
-  
-  padding-top: 100px;
-  width:100%;
-  height: 350px;
-  
+  width: 100%;
+  min-height: 50vh;
+  height: 50vh;
+  margin-top: 1em;
+  padding: 0;
 }
 .container{
   padding-top: 5em;

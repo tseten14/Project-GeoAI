@@ -1,39 +1,59 @@
 var mymap;
 
 
-//Part 3: Adding Map
+//Part 3: Adding Map - center on Mahwah, NJ area; use OSM tiles so map always displays
+const MAHWAH_NJ = [41.089, -74.144];
 const create_map = () => {
-    mymap = L.map('mapid').setView([41, -74], 4);
-     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-       maxZoom: 18,
-       id: 'mapbox/streets-v11',
-       tileSize: 512,
-       zoomOffset: -1,
-       accessToken: 'pk.eyJ1IjoiYnRoYXBhMyIsImEiOiJja2hqYmtwMjMxd3kwMnF0OW9qbm83eG1iIn0.-cY1kDjXImx1CUySGcGtWA'
-     }).addTo(mymap)
-     var x = document.getElementsByClassName("tablerow");
-     
-     for (i = 0; i < x.length; i++) {
-        const obj=JSON.parse(x[i].getAttribute("dataobject"));
-        const marker = L.marker([obj.Latitude,obj.Longitude]).addTo(mymap);
-        x[i].addEventListener("click",()=>{
-          mymap.flyTo([ obj.Latitude,obj.Longitude ], 8);
-         
-        })
-        
-        marker.on('click',function clickmarker(){
-          var popup=L.popup();
-          popup
-            .setLatLng([obj.Latitude,obj.Longitude])
-            .setContent(obj.Firstname+ " " +obj.Lastname+'\n'+" "+obj.Email
-            +"    "+ obj.Latitude+" "+obj.Longitude+" "+ obj.Street)
-            .openOn(mymap);
+    mymap = L.map('mapid').setView(MAHWAH_NJ, 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(mymap);
 
-        })
-      }
-      
- }
+    var x = document.getElementsByClassName("tablerow");
+    var bounds = [];
+
+    for (var i = 0; i < x.length; i++) {
+        var raw = x[i].getAttribute("dataobject");
+        if (!raw) continue;
+        // In case attribute was double-encoded, decode HTML entities (browser usually decodes once)
+        raw = raw.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+
+        var obj;
+        try {
+            obj = JSON.parse(raw);
+        } catch (err) {
+            console.warn("Unable to parse row data", err, raw);
+            continue;
+        }
+
+        var lat = parseFloat(obj.Latitude);
+        var lng = parseFloat(obj.Longitude);
+        if (isNaN(lat) || isNaN(lng)) continue;
+
+        bounds.push([lat, lng]);
+        var latLng = [lat, lng];
+
+        // Add marker with popup (click marker to see contact info)
+        var popupContent = (obj.Firstname || "") + " " + (obj.Lastname || "") + "<br>" +
+            (obj.Email || "") + "<br>" + (obj.Street || "") + ", " + (obj.City || "");
+        var marker = L.marker(latLng).addTo(mymap).bindPopup(popupContent);
+
+        // Click row (except Delete/Update buttons) to fly map to that address and show marker popup
+        (function (row, lat, lng, m) {
+            row.style.cursor = "pointer";
+            row.addEventListener("click", function (e) {
+                if (e.target.closest("button") || e.target.closest("form")) return;
+                mymap.flyTo([lat, lng], 14);
+                m.openPopup();
+            });
+        })(x[i], lat, lng, marker);
+    }
+
+    if (bounds.length > 0) {
+        mymap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+    }
+}
  //Part 7 Will Search for name
  function myname() {
   // Declare variables
