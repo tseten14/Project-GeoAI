@@ -107,9 +107,13 @@ routes.get('/login_fail', function (req, res) {
   res.render('login_fail', {});
 });
 
-routes.get('/logout', function (req, res) {
+routes.get('/logout', function (req, res, next) {
+  // Passport 0.6+ requires a callback; also make sure we fully clear the session
   req.logout(function (err) {
-    res.redirect('/login');
+    if (err) { return next(err); }
+    req.session.destroy(function () {
+      res.redirect('/login');
+    });
   });
 });
 
