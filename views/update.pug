@@ -1,81 +1,84 @@
-//- Update Page
+//- Update contact Page
 extends layout
 
 block content
+  .container.page-form
+    .toolbar
+      a(href='/contacts').btn.btn-secondary Main Page
+      a(href='/logout').btn.btn-secondary Logout
 
-  doctype html
-  html
-    head
-      title Guessing game - guess page
+    form(action="/update" method="post")
+      input(type="hidden" name="mongoID" value=object._id)
+      .card
+        .card-header Edit contact
+        .card-body
+          .form-group
+            label.form-label Prefix
+            .radio-group
+              label
+                input(type="radio" name="Prefix" value="Mr" checked=(object.Prefix === 'Mr'))
+                | Mr.
+              label
+                input(type="radio" name="Prefix" value="Mrs" checked=(object.Prefix === 'Mrs'))
+                | Mrs.
+              label
+                input(type="radio" name="Prefix" value="Ms" checked=(object.Prefix === 'Ms'))
+                | Ms.
+              label
+                input(type="radio" name="Prefix" value="Dr" checked=(object.Prefix === 'Dr'))
+                | Dr.
 
-    body
-      .container
-        .col
-          div(id="logoutlink")
-            a(href='/logout').btn.btn-secondary Logout
-        .col.col-md11
-          form(action="update", method="post")
-            .card
-                .card-body
-                  p
-                  input( type="radio" name="Prefix" id="r1" value="Mr" checked=true)
-                  |  Mr. 
-                  input( type="radio" name="Prefix" id="r2" value="Mrs" )  
-                  | Mrs. 
-                  input( type="radio" name="Prefix" id="r3" value="Ms" )  
-                  | Ms. 
-                  input( type="radio" name="Prefix" id="r4" value="Dr" )  
-                  | Dr. 
+          .form-row
+            .form-group
+              label.form-label(for="Firstname") First name
+              input.form-control#Firstname(type="text" name="Firstname" value=object.Firstname)
+            .form-group
+              label.form-label(for="Lastname") Last name
+              input.form-control#Lastname(type="text" name="Lastname" value=object.Lastname)
 
+          .form-group
+            label.form-label(for="Street") Street
+            input.form-control#Street(type="text" name="Street" value=object.Street)
 
-                  p.
-                  input(type="hidden" id="id" name="mongoID" value= object._id )
-                  | First Name:   
-                  input(type="text" name="Firstname" value=object.Firstname)
-                  | Last Name:   
-                  input(type="text" name="Lastname" value=object.Lastname)
+          .form-row
+            .form-group
+              label.form-label(for="City") City
+              input.form-control#City(type="text" name="City" value=object.City)
+            .form-group
+              label.form-label(for="State") State
+              select.form-control#State(name="State")
+                option(value="" disabled selected=(!object.State)) Select state
+                option(value="NJ" selected=(object.State === 'NJ')) NJ
+                option(value="NY" selected=(object.State === 'NY')) NY
+                option(value="PA" selected=(object.State === 'PA')) PA
+                option(value="CT" selected=(object.State === 'CT')) CT
+            .form-group
+              label.form-label(for="Zip") Zip
+              input.form-control#Zip(type="text" name="Zip" value=object.Zip)
 
-                  p.
-                  | Street:   
-                  input(type="text" name="Street" value=object.Street)
-                  |  City:   
-                  input(type="text" name="City" value=object.City)
+          .form-group
+            label.form-label(for="Phone") Phone
+            input.form-control#Phone(type="text" name="Phone" value=object.Phone)
 
-                  p.
-                  | State:
-                  select(name ="State" id="select" selected=object.State)
-                    option(value="" disabled selected )| Select your Option
-                    option(value="NJ") NJ
-                    option(value="NY") NY
-                    option(value="PA") PA
-                    option(value="CT") CT
+          .form-group
+            label.form-label(for="Email") Email
+            input.form-control#Email(type="text" name="Email" value=object.Email)
 
-                  | Zip:
-                  input(type="text" name="Zip" value=object.Zip)
+          .form-group
+            label.form-label Contact by
+            .checkbox-group
+              label
+                input(type="checkbox" name="checkphone" checked=(object.Contactbyphone === 'on'))
+                | Phone
+              label
+                input(type="checkbox" name="checkemail" checked=(object.Contactbyemail === 'on'))
+                | Email
+              label
+                input(type="checkbox" name="checkmail" checked=(object.contactbymail === 'on'))
+                | Mail
+              label
+                input(type="checkbox" name="checkall")
+                | Any
 
-                  p.
-                  | Phone: 
-                  input(type="text" name="Phone" value=object.Phone)
-
-                  p
-                  | Email:
-                  input(type="text" name="Email" value=object.Email)
-
-                  p.
-                  | How may we contact you?
-                  input(type="checkbox" name="checkphone")
-                  label(for="checkphone") Phone
-                  input(type="checkbox" name="checkemail")
-                  label(for="checkemail") Email
-                  input(type="checkbox" name="checkmail")
-                  label(for="checkmail") Mail
-                  input(type="checkbox" name="checkall")
-                  label(for="checkall") Any
-
-                  p.
-                  button(type="submit").btn.btn-primary Update
-
-
-
-
-
+          .form-group.form-actions
+            button.btn.btn-primary(type="submit") Update

@@ -1,81 +1,85 @@
-//- Part 1. Contact Creation Page
+//- Add Contact (mailer) Page
 extends layout
 
 block content
+  .container.page-form
+    .toolbar
+      a(href='/contacts').btn.btn-secondary Main Page
+      a(href='/logout').btn.btn-secondary Logout
 
-  doctype html
-  html
-    head
-      title Guessing game - guess page
-    
-    body
-      .container
-        .col
-          div(id="logoutlink")
-            a(href='/contacts').btn.btn-secondary Main Page
-            |  
-            a(href='/logout').btn.btn-secondary Logout
-        .col.col-md11
-          form(action="/mailer", method="post")
-            .card
-              .card-body
-                p
-                input( type="radio" name="Prefix" id="r1" value="Mr" checked=true)
-                |  Mr. 
-                input( type="radio" name="Prefix" id="r2" value="Mrs" )  
-                | Mrs. 
-                input( type="radio" name="Prefix" id="r3" value="Ms" )  
-                | Ms. 
-                input( type="radio" name="Prefix" id="r4" value="Dr" )  
-                | Dr. 
+    form(action="/mailer" method="post")
+      .card
+        .card-header Add contact
+        .card-body
+          .form-group
+            label.form-label Prefix
+            .radio-group
+              label
+                input(type="radio" name="Prefix" value="Mr" checked)
+                | Mr.
+              label
+                input(type="radio" name="Prefix" value="Mrs")
+                | Mrs.
+              label
+                input(type="radio" name="Prefix" value="Ms")
+                | Ms.
+              label
+                input(type="radio" name="Prefix" value="Dr")
+                | Dr.
 
+          .form-row
+            .form-group
+              label.form-label(for="Firstname") First name
+              input.form-control#Firstname(type="text" name="Firstname" value="")
+            .form-group
+              label.form-label(for="Lastname") Last name
+              input.form-control#Lastname(type="text" name="Lastname" value="")
 
-                p.
-                | First Name:   
-                input(type="text" name="Firstname" value="")
-                | Last Name:   
-                input(type="text" name="Lastname" value="")
+          .form-group
+            label.form-label(for="Street") Street
+            input.form-control#Street(type="text" name="Street" value="")
 
-                p.
-                | Street:   
-                input(type="text" name="Street" value="")
-                |  City:   
-                input(type="text" name="City" value="")
+          .form-row
+            .form-group
+              label.form-label(for="City") City
+              input.form-control#City(type="text" name="City" value="")
+            .form-group
+              label.form-label(for="State") State
+              select.form-control#State(name="State")
+                option(value="" disabled selected) Select state
+                option(value="NJ") NJ
+                option(value="NY") NY
+                option(value="PA") PA
+                option(value="CT") CT
+            .form-group
+              label.form-label(for="Zip") Zip
+              input.form-control#Zip(type="text" name="Zip" value="")
 
-                p.
-                | State:
-                select(name ="State" id="select")
-                  option(value="" disabled selected )| Select your Option
-                  option(value="NJ") NJ
-                  option(value="NY") NY
-                  option(value="PA") PA
-                  option(value="CT") CT
-                | Zip:
-                input(type="text" name="Zip" value="")
+          .form-group
+            label.form-label(for="Phone") Phone
+            input.form-control#Phone(type="text" name="Phone" value="")
 
-                p.
-                | Phone: 
-                input(type="text" name="Phone" value="")
+          .form-group
+            label.form-label(for="Email") Email
+            input.form-control#Email(type="text" name="Email" value="")
 
-                p
-                | Email:
-                input(type="text" name="Email" value="")
-
-                p.
-                | How may we contact you?
+          .form-group
+            label.form-label Contact by
+            .checkbox-group
+              label
                 input(type="checkbox" name="checkphone")
-                label(for="checkphone") Phone
+                | Phone
+              label
                 input(type="checkbox" name="checkemail")
-                label(for="checkemail") Email
+                | Email
+              label
                 input(type="checkbox" name="checkmail")
-                label(for="checkmail") Mail
+                | Mail
+              label
                 input(type="checkbox" name="checkall")
-                label(for="checkall") Any
+                | Any
 
-                p.
-                button(type="submit").btn.btn-primary Complete
-    
-
-
+          .form-group.form-actions
+            button.btn.btn-primary(type="submit") Complete
 
 

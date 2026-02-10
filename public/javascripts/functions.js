@@ -54,6 +54,15 @@ const create_map = () => {
         mymap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
     }
 }
+
+if (document.getElementById('mapid') && typeof L !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', create_map);
+    } else {
+        create_map();
+    }
+}
+
  //Part 7 Will Search for name
  function myname() {
   // Declare variables
