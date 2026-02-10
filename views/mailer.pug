@@ -12,6 +12,8 @@ block content
       .container
         .col
           div(id="logoutlink")
+            a(href='/contacts').btn.btn-secondary Main Page
+            |  
             a(href='./logout').btn.btn-secondary Logout
         .col.col-md11
           form(action="/mailer", method="post")
@@ -71,7 +73,7 @@ block content
                 label(for="checkall") Any
 
                 p.
-                button(type="submit").btn.btn-primary Send me a span forever
+                button(type="submit").btn.btn-primary Complete
     
 
 
