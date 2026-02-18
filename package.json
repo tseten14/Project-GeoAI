@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./index.js"
+    "start": "node ./index.js",
+    "build:traffic": "cd traffic-app && npm ci && npm run build",
+    "dev:traffic": "cd traffic-app && npm run dev"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

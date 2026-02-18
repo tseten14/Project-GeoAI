@@ -118,7 +118,14 @@ routes.get('/logout', function (req, res, next) {
 });
 
 app.use('/', routes);
-  
+
+// Traffic Insights (React SPA) – serve built assets and SPA fallback
+var trafficDist = path.join(__dirname, 'traffic-app', 'dist');
+app.use('/traffic', express.static(trafficDist));
+app.get('/traffic/*', function (req, res) {
+  res.sendFile(path.join(trafficDist, 'index.html'));
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
