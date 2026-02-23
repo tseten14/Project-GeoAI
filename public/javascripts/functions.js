@@ -1,5 +1,69 @@
 var mymap;
 
+// ── Pagination ──────────────────────────────────────────
+var currentPage = 1;
+var rowsPerPage = 5;
+
+function getVisibleRows() {
+  var table = document.getElementById("table");
+  if (!table) return [];
+  var allRows = table.querySelectorAll("tbody tr.tablerow");
+  // When search is active, only consider rows not hidden by search
+  var visible = [];
+  allRows.forEach(function(row) {
+    if (!row.dataset.searchHidden) {
+      visible.push(row);
+    }
+  });
+  return visible;
+}
+
+function paginateTable() {
+  var rows = getVisibleRows();
+  var totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  var start = (currentPage - 1) * rowsPerPage;
+  var end = start + rowsPerPage;
+
+  rows.forEach(function(row, idx) {
+    if (idx >= start && idx < end) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+
+  // Update page info
+  var pageInfo = document.getElementById("pageInfo");
+  if (pageInfo) {
+    pageInfo.textContent = "Page " + currentPage + " of " + totalPages;
+  }
+
+  // Disable/enable buttons
+  var prevBtn = document.getElementById("prevPage");
+  var nextBtn = document.getElementById("nextPage");
+  if (prevBtn) prevBtn.disabled = currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+}
+
+function nextPage() {
+  currentPage++;
+  paginateTable();
+}
+
+function prevPage() {
+  currentPage--;
+  paginateTable();
+}
+
+// Initialize pagination on load
+document.addEventListener("DOMContentLoaded", function() {
+  paginateTable();
+});
+
 
 //Part 3: Adding Map - center on Mahwah, NJ area; use OSM tiles so map always displays
 const MAHWAH_NJ = [41.089, -74.144];
@@ -65,67 +129,63 @@ if (document.getElementById('mapid') && typeof L !== 'undefined') {
 
  //Part 7 Will Search for name
  function myname() {
-  // Declare variables
-  var input, filter, table, tr, td1,td2 ,i, txtValue;
+  var input, filter, table, tr, td1, td2, i, txtValue;
   input = document.getElementById("inputfornames");
   filter = input.value.toUpperCase();
   table = document.getElementById("table");
-  tr = table.getElementsByTagName("tr");
+  tr = table.querySelectorAll("tbody tr.tablerow");
 
-  // Loop through all table rows, and hide those who don't match the search query
   for (i = 0; i < tr.length; i++) {
-  
-    td1 = tr[i].getElementsByTagName("td")[1] ;
-    td2= tr[i].getElementsByTagName("td")[2] ;
+    td1 = tr[i].getElementsByTagName("td")[1];
+    td2 = tr[i].getElementsByTagName("td")[2];
 
     if (td1 || td2) {
-      
-      txtValue1 = td1.textContent || td1.innerText;//for first name
-      txtValue2 = td2.textContent || td2.innerText;//for last name
-      txtValue=txtValue1+txtValue2;
+      var txtValue1 = td1.textContent || td1.innerText;
+      var txtValue2 = td2.textContent || td2.innerText;
+      txtValue = txtValue1 + txtValue2;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
+        delete tr[i].dataset.searchHidden;
       } else {
+        tr[i].dataset.searchHidden = "true";
         tr[i].style.display = "none";
       }
     }
   }
+  currentPage = 1;
+  paginateTable();
 }
 
 //Part 8
 //Will search for address
 function myaddress() {
-  // Declare variables
-  var input, filter, table, tr, td1,td2,td3, i, txtValue;
+  var input, filter, table, tr, i, txtValue;
   input = document.getElementById("inputforadd");
   filter = input.value.toUpperCase();
   table = document.getElementById("table");
-  tr = table.getElementsByTagName("tr");
- 
-  // Loop through all table rows, and hide those who don't match the search query
-  for (i = 0; i < tr.length; i++) {
-    console.log(tr);
-    td = tr[i].getElementsByTagName("td")[3] ;
-    td2= tr[i].getElementsByTagName("td")[4] ; 
-    td3= tr[i].getElementsByTagName("td")[5] ;  
-    td4= tr[i].getElementsByTagName("td")[6] ;  
+  tr = table.querySelectorAll("tbody tr.tablerow");
 
-    if (td ||td2 || td3||td4) {
-      txtValue1 = td.textContent || td.innerText;//street
-      txtValue2 = td2.textContent || td2.innerText;//city
-      txtValue3 = td3.textContent || td3.innerText;//state
-      txtValue4 = td4.textContent || td4.innerText;//zip
-      txtValue=txtValue1+txtValue2+txtValue3+txtValue4;
+  for (i = 0; i < tr.length; i++) {
+    var td = tr[i].getElementsByTagName("td")[3];
+    var td2 = tr[i].getElementsByTagName("td")[4];
+    var td3 = tr[i].getElementsByTagName("td")[5];
+    var td4 = tr[i].getElementsByTagName("td")[6];
+
+    if (td || td2 || td3 || td4) {
+      var txtValue1 = td.textContent || td.innerText;
+      var txtValue2 = td2.textContent || td2.innerText;
+      var txtValue3 = td3.textContent || td3.innerText;
+      var txtValue4 = td4.textContent || td4.innerText;
+      txtValue = txtValue1 + txtValue2 + txtValue3 + txtValue4;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
+        delete tr[i].dataset.searchHidden;
       } else {
+        tr[i].dataset.searchHidden = "true";
         tr[i].style.display = "none";
       }
     }
   }
+  currentPage = 1;
+  paginateTable();
 }
-
-
-
 
  

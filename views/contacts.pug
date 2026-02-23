@@ -64,6 +64,10 @@ block content
                     form(action="/getupdateform" method="post" style="display:inline")
                       input(type="hidden" name="mongoID" value=object._id)
                       button.btn.btn-secondary.btn-sm(type="submit") Update
+        .pagination-controls
+          button.btn.btn-secondary.btn-sm#prevPage(onclick="prevPage()") ← Prev
+          span#pageInfo Page 1
+          button.btn.btn-secondary.btn-sm#nextPage(onclick="nextPage()") Next →
 
     .col.col-12
       div(id="mapid")
