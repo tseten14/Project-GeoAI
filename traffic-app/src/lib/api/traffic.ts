@@ -1,5 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
-
 export interface TrafficAnalysis {
   roads: {
     total: number;
@@ -16,6 +14,8 @@ export interface TrafficAnalysis {
   bridgesAndTunnels: number;
   roadDensity: number;
   connectivityScore: number;
+  congestionScore: number;
+  congestionLevel: string;
 }
 
 export interface AnalysisMetadata {
@@ -39,26 +39,31 @@ export async function analyzeTraffic(
   lon: number,
   radiusMiles: number = 5
 ): Promise<TrafficResponse> {
-  const { data, error } = await supabase.functions.invoke('osm-traffic-analysis', {
-    body: { lat, lon, radiusMiles },
-  });
+  try {
+    const response = await fetch('/api/traffic-analysis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ lat, lon, radiusMiles }),
+    });
 
-  if (error) {
-    return { success: false, error: error.message };
-  }
+    const data = await response.json();
 
-  // Handle null/undefined response (e.g. function not deployed, empty response)
-  if (!data) {
+    if (!response.ok) {
+      return { success: false, error: data.error || `Server error: ${response.status}` };
+    }
+
+    if (data.success === false && data.error) {
+      return { success: false, error: data.error };
+    }
+
+    return data;
+  } catch (error) {
     return {
       success: false,
-      error: 'No response from server. Make sure the osm-traffic-analysis function is deployed.',
+      error: error instanceof Error ? error.message : 'Network error communicating with the server'
     };
   }
-
-  // Function may return { success: false, error } in body even on 200
-  if (data.success === false && data.error) {
-    return { success: false, error: data.error };
-  }
-
-  return data;
 }
+

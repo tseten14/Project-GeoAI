@@ -48,10 +48,8 @@ block content
               label.form-label(for="State") State
               select.form-control#State(name="State")
                 option(value="" disabled selected=(!object.State)) Select state
-                option(value="NJ" selected=(object.State === 'NJ')) NJ
-                option(value="NY" selected=(object.State === 'NY')) NY
-                option(value="PA" selected=(object.State === 'PA')) PA
-                option(value="CT" selected=(object.State === 'CT')) CT
+                each st in ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','PR','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
+                  option(value=st selected=(object.State === st))= st
             .form-group
               label.form-label(for="Zip") Zip
               input.form-control#Zip(type="text" name="Zip" value=object.Zip)

@@ -44,8 +44,10 @@ block content
                 - var jsonSafe = JSON.stringify(object).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                 tr.tablerow(dataobject!=jsonSafe)
                   td #{object.Prefix}
-                  td #{object.Firstname}
-                  td #{object.Lastname}
+                  td
+                    a(href='/traffic/?lat=' + object.Latitude + '&lng=' + object.Longitude + '&radius=5') #{object.Firstname}
+                  td
+                    a(href='/traffic/?lat=' + object.Latitude + '&lng=' + object.Longitude + '&radius=5') #{object.Lastname}
                   td #{object.Street}
                   td #{object.City}
                   td #{object.State}

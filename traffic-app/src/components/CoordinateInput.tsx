@@ -11,17 +11,19 @@ interface CoordinateInputProps {
   isLoading: boolean;
   initialLat?: number;
   initialLon?: number;
+  initialRadius?: number;
 }
 
 export function CoordinateInput({ 
   onSubmit, 
   isLoading, 
   initialLat = 40.7128, 
-  initialLon = -74.006 
+  initialLon = -74.006,
+  initialRadius = 5
 }: CoordinateInputProps) {
   const [lat, setLat] = useState(initialLat.toString());
   const [lon, setLon] = useState(initialLon.toString());
-  const [radius, setRadius] = useState(5);
+  const [radius, setRadius] = useState(initialRadius);
 
   // Sync with parent when center changes (e.g. from map click)
   useEffect(() => {

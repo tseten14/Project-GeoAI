@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import { Header } from '@/components/Header';
@@ -9,16 +9,31 @@ import { AnalysisDashboard } from '@/components/AnalysisDashboard';
 import { analyzeTraffic, TrafficAnalysis, AnalysisMetadata } from '@/lib/api/traffic';
 import { AlertCircle, Map } from 'lucide-react';
 
+import { useSearchParams } from 'react-router-dom';
+
 type PipelineStage = 'idle' | 'extract' | 'transform' | 'load' | 'complete';
 
 export default function Index() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  const urlLat = searchParams.get('lat');
+  const urlLng = searchParams.get('lng');
+  const urlRadius = searchParams.get('radius');
+
+  const initialLat = urlLat ? parseFloat(urlLat) : 40.7128;
+  const initialLng = urlLng ? parseFloat(urlLng) : -74.006;
+  const initialRadius = urlRadius ? parseInt(urlRadius, 10) : 5;
+
   const [isLoading, setIsLoading] = useState(false);
   const [pipelineStage, setPipelineStage] = useState<PipelineStage>('idle');
-  const [center, setCenter] = useState<[number, number]>([40.7128, -74.006]);
-  const [radius, setRadius] = useState(5);
+  const [center, setCenter] = useState<[number, number]>([initialLat, initialLng]);
+  const [radius, setRadius] = useState(initialRadius);
   const [analysis, setAnalysis] = useState<TrafficAnalysis | null>(null);
   const [metadata, setMetadata] = useState<AnalysisMetadata | null>(null);
+
+  // We use a ref so we only auto-analyze once on mount
+  const hasAutoAnalyzed = useRef(false);
 
   const handleAnalyze = useCallback(async (lat: number, lon: number, radiusMiles: number) => {
     setIsLoading(true);
@@ -32,7 +47,7 @@ export default function Index() {
     await new Promise(resolve => setTimeout(resolve, 600));
 
     setPipelineStage('transform');
-    
+
     try {
       const response = await analyzeTraffic(lat, lon, radiusMiles);
 
@@ -42,7 +57,7 @@ export default function Index() {
       if (response.success && response.data && response.metadata) {
         setPipelineStage('load');
         await new Promise(resolve => setTimeout(resolve, 400));
-        
+
         setAnalysis(response.data);
         setMetadata(response.metadata);
         setPipelineStage('complete');
@@ -67,6 +82,14 @@ export default function Index() {
     }
   }, [toast]);
 
+  // Effect to perform initial analysis if coordinates are provided in URL
+  useEffect(() => {
+    if (urlLat && urlLng && !hasAutoAnalyzed.current) {
+      hasAutoAnalyzed.current = true;
+      handleAnalyze(initialLat, initialLng, initialRadius);
+    }
+  }, [urlLat, urlLng, initialLat, initialLng, initialRadius, handleAnalyze]);
+
   const handleMapClick = useCallback((lat: number, lon: number) => {
     setCenter([lat, lon]);
   }, []);
@@ -84,8 +107,9 @@ export default function Index() {
               isLoading={isLoading}
               initialLat={center[0]}
               initialLon={center[1]}
+              initialRadius={radius}
             />
-            
+
             <AnimatePresence>
               {pipelineStage !== 'idle' && (
                 <PipelineStatus stage={pipelineStage} />
