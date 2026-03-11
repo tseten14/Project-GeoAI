@@ -220,39 +220,49 @@ export function CoordinateInput({
         </AnimatePresence>
 
         {mode === 'radius' && (
-          <div className="space-y-2 pt-2">
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="space-y-2 pt-2"
+          >
             <Label className="text-xs text-muted-foreground font-light">Quick Select Center</Label>
             <div className="flex flex-wrap gap-2">
               {presetLocations.map((loc) => (
-                <Button
-                  key={loc.name} type="button" variant="secondary" size="sm"
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  key={loc.name} type="button" 
                   onClick={() => { setLat(loc.lat.toString()); setLon(loc.lon.toString()); }}
-                  className="text-xs h-8 font-medium"
+                  className="text-xs h-8 font-medium px-3 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
                 >
                   {loc.name}
-                </Button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
-        <Button 
-          type="submit" 
-          disabled={isLoading}
-          className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium btn-apple mt-4"
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          {isLoading ? (
-            <>
-              <div className="w-4 h-4 mr-2 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <Search className="w-4 h-4 mr-2" />
-              Analyze Traffic
-            </>
-          )}
-        </Button>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium border-0 shadow-lg hover:shadow-primary/25 transition-all mt-4"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 mr-2 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4 mr-2" />
+                Analyze Traffic
+              </>
+            )}
+          </Button>
+        </motion.div>
       </form>
     </motion.div>
   );

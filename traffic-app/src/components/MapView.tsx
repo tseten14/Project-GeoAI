@@ -1,30 +1,34 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { POIMarker } from '@/lib/api/traffic';
+import 'leaflet.heat'; // Import the heatmap plugin
+import { POIMarker, RouteData } from '@/lib/api/traffic';
 
 interface MapViewProps {
   center: [number, number];
   radiusMiles: number;
   onMapClick?: (lat: number, lon: number) => void;
-  routeGeometry?: [number, number][] | null;
+  routes?: RouteData[] | null;
   poiMarkers?: POIMarker[];
   isRouteMode?: boolean;
   destination?: [number, number];
+  poiDisplayMode?: 'heatmap' | 'points';
 }
 
 export function MapView({ 
   center, 
   radiusMiles, 
   onMapClick, 
-  routeGeometry, 
+  routes, 
   poiMarkers, 
   isRouteMode, 
-  destination 
+  destination,
+  poiDisplayMode = 'heatmap'
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layersRef = useRef<L.LayerGroup | null>(null);
+  const heatLayerRef = useRef<L.HeatLayer | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -70,6 +74,10 @@ export function MapView({
     
     // Clear existing layers
     layerGroup.clearLayers();
+    if (heatLayerRef.current) {
+        map.removeLayer(heatLayerRef.current);
+        heatLayerRef.current = null;
+    }
 
     // 1. Draw Origin Center (Apple Maps Style)
     const originIcon = L.divIcon({
@@ -87,7 +95,7 @@ export function MapView({
     });
     L.marker(center, { icon: originIcon }).addTo(layerGroup);
 
-    // 2. Draw destination and route (If Route Mode)
+    // 2. Draw destination and routes (If Route Mode)
     if (isRouteMode && destination) {
       const destIcon = L.divIcon({
         className: 'custom-marker',
@@ -104,17 +112,26 @@ export function MapView({
       });
       L.marker(destination, { icon: destIcon }).addTo(layerGroup);
 
-      if (routeGeometry && routeGeometry.length > 0) {
-        const polyline = L.polyline(routeGeometry, {
-          color: '#007AFF', // Apple Blue
-          weight: 5,
-          opacity: 0.8,
-          lineJoin: 'round',
-          lineCap: 'round',
-        }).addTo(layerGroup);
-        
-        // Auto-fit map to the route line
-        map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+      if (routes && routes.length > 0) {
+        // Draw alternate back-routes first so primary draws on top
+        for (let i = routes.length - 1; i >= 0; i--) {
+            const isPrimary = i === 0;
+            const route = routes[i];
+            
+            const polyline = L.polyline(route.coordinates, {
+              color: isPrimary ? '#007AFF' : '#6B7280', // Apple Blue vs Gray
+              weight: isPrimary ? 5 : 4,
+              opacity: isPrimary ? 0.8 : 0.6,
+              lineJoin: 'round',
+              lineCap: 'round',
+              dashArray: isPrimary ? undefined : '10, 10'
+            }).addTo(layerGroup);
+            
+            // Auto-fit map to the PRIMARY route line
+            if (isPrimary) {
+               map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+            }
+        }
       }
     } else {
       // 3. Draw Radius Circle (If Area Mode)
@@ -132,29 +149,42 @@ export function MapView({
       map.fitBounds(circle.getBounds(), { padding: [20, 20] });
     }
 
-    // 4. Draw POIs
+    // 4. Draw Heatmap or Points
     if (poiMarkers && poiMarkers.length > 0) {
-      poiMarkers.forEach(poi => {
-        let color = '#FF3B30'; // Red for signals
-        let size = 8;
-        
-        const poiIcon = L.divIcon({
-          className: 'poi-marker',
-          html: `<div style="
-            width: ${size}px; height: ${size}px;
-            background: ${color};
-            border-radius: 50%; border: 1.5px solid #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-          "></div>`,
-          iconSize: [size, size],
-          iconAnchor: [size/2, size/2],
+      if (poiDisplayMode === 'heatmap') {
+        const heatData = poiMarkers.map(poi => [poi.lat, poi.lon, 1]); 
+
+        // @ts-ignore
+        heatLayerRef.current = L.heatLayer(heatData, {
+            radius: 20,
+            blur: 15,
+            maxZoom: 14,
+            gradient: {
+                0.4: 'lime',
+                0.6: 'cyan',
+                0.7: 'blue',
+                0.8: 'yellow',
+                1.0: 'red'
+            }
+        }).addTo(map);
+      } else {
+        // Draw individual points
+        poiMarkers.forEach(poi => {
+           const typeLabel = 'Traffic Signal';
+           
+           L.circleMarker([poi.lat, poi.lon], {
+              radius: 5,
+              fillColor: '#FF9500',
+              color: '#FFFFFF',
+              weight: 1.5,
+              opacity: 1,
+              fillOpacity: 0.9
+           }).bindPopup(`<div class="text-sm font-medium">${typeLabel}</div>`).addTo(layerGroup);
         });
-        
-        L.marker([poi.lat, poi.lon], { icon: poiIcon }).bindTooltip(poi.type).addTo(layerGroup);
-      });
+      }
     }
 
-  }, [center, radiusMiles, routeGeometry, poiMarkers, isRouteMode, destination]);
+  }, [center, radiusMiles, routes, poiMarkers, isRouteMode, destination, poiDisplayMode]);
 
   return (
     <div 

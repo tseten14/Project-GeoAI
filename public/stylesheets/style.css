@@ -18,6 +18,14 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #06b6d4;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 * {
@@ -25,7 +33,9 @@
 }
 
 body {
-  background: var(--bg);
+  background: linear-gradient(-45deg, #eef1f5, #e2e8f0, #f8fafc, #edf2f7);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   margin: 0;
@@ -37,15 +47,21 @@ body {
 
 /* Header – matches GeoTraffic header */
 .site-header {
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border);
+  background: var(--glass);
+  border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--shadow-sm);
   padding: 0.75rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
+}
+
+.site-header:hover {
   background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--shadow-md);
 }
 
 .site-header .container {
@@ -142,11 +158,19 @@ body {
 }
 
 .table-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.table-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
 .table-card-header {
@@ -206,11 +230,12 @@ body {
 }
 
 .table tbody tr {
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .table tbody tr:hover {
-  background: rgba(37, 99, 235, 0.04);
+  background: rgba(37, 99, 235, 0.08);
+  transform: scale(1.005);
 }
 
 .table tbody tr:last-child td {
@@ -241,8 +266,8 @@ tr.tablerow {
   justify-content: center;
   gap: 1rem;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--border);
-  background: #f8f9fb;
+  border-top: 1px solid var(--glass-border);
+  background: rgba(248, 249, 251, 0.5);
 }
 
 .pagination-controls #pageInfo {
@@ -320,8 +345,8 @@ tr.tablerow {
 }
 
 .btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .btn:active {
@@ -391,11 +416,18 @@ tr.tablerow {
 }
 
 .page-form .card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
   overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page-form .card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
 .page-form .card-header {

@@ -36,8 +36,14 @@ export interface POIMarker {
   id: number;
 }
 
+export interface RouteData {
+  coordinates: [number, number][];
+  durationSeconds: number;
+  distanceMeters: number;
+}
+
 export interface TrafficVisualData {
-  routeCoordinates: [number, number][] | null;
+  routes: RouteData[] | null;
   poiMarkers: POIMarker[];
 }
 

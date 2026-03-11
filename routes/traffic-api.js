@@ -22,15 +22,15 @@ function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
 
 async function fetchRouteFromOSRM(lat1, lon1, lat2, lon2) {
     try {
-        const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=full`;
+        const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=full&alternatives=true`;
         const response = await axios.get(url, { timeout: 10000 });
         if (response.data.code === 'Ok' && response.data.routes.length > 0) {
-            const route = response.data.routes[0];
-            return {
+            // Return all routes instead of just index 0
+            return response.data.routes.map(route => ({
                 geometry: route.geometry,
                 distanceMeters: route.distance,
                 durationSeconds: route.duration,
-            };
+            }));
         }
         throw new Error('OSRM returned no routes');
     } catch (error) {
@@ -99,12 +99,22 @@ router.post('/traffic-analysis', async (req, res) => {
         let routeData = null;
         let queryAreaStr = '';
         let searchRadiusMeters = 0;
-        let routeGeoJsonCoords = [];
+        let routeGeoJsonCoordsList = [];
 
         if (isRouteMode) {
             console.log(`Fetching route from (${lat}, ${lon}) to (${destLat}, ${destLon})`);
-            routeData = await fetchRouteFromOSRM(lat, lon, destLat, destLon);
-            const decodedCoords = polyline.decode(routeData.geometry);
+            const allRoutes = await fetchRouteFromOSRM(lat, lon, destLat, destLon);
+            routeData = allRoutes[0]; // Primary route is still used for stats
+
+            // Decode all routes for the frontend
+            routeGeoJsonCoordsList = allRoutes.map(r => ({
+              coordinates: polyline.decode(r.geometry).map(c => [c[0], c[1]]), // [lat, lon]
+              durationSeconds: r.durationSeconds,
+              distanceMeters: r.distanceMeters
+            }));
+
+            // We still use primary route's path to build the Overpass query radius
+            const decodedCoords = routeGeoJsonCoordsList[0].coordinates;
             // Sample coordinates to prevent massive Overpass queries on long routes
             // The Overpass 'around' feature using a polyline creates a massive complex polygon buffer
             // which often times out on the public free API when > 15-20 points are used.
@@ -122,9 +132,9 @@ router.post('/traffic-analysis', async (req, res) => {
             }
             
             // Format for Overpass `around` polyline syntax: lat1,lon1,lat2,lon2,...
-            const overpassPolyline = sampledCoords.map(coord => `${coord[0]},${coord[1]}`).join(',');
             
-            routeGeoJsonCoords = decodedCoords.map(coord => [coord[0], coord[1]]); // Full geometry for frontend map rendering
+            // Format for Overpass `around` polyline syntax: lat1,lon1,lat2,lon2,...
+            const overpassPolyline = sampledCoords.map(coord => `${coord[0]},${coord[1]}`).join(',');
 
             // In route mode, search 250 meters around the simplified route line
             queryAreaStr = `(around:250,${overpassPolyline})`;
@@ -320,7 +330,7 @@ router.post('/traffic-analysis', async (req, res) => {
                 routeDurationEstimateStr: isRouteMode ? `${Math.round(routeData.durationSeconds / 60)} minutes` : null
             },
             visualData: {
-                routeCoordinates: isRouteMode ? routeGeoJsonCoords : null,
+                routes: isRouteMode ? routeGeoJsonCoordsList : null,
                 poiMarkers: poiMarkers // Send the max 1500 limit points for Leaflet overlay
             }
         });

@@ -113,12 +113,27 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    background: linear-gradient(-45deg, hsl(220, 20%, 97%), hsl(220, 14%, 94%), hsl(211, 100%, 95%), hsl(190, 70%, 95%));
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, sans-serif;
     font-weight: 400;
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .dark body {
+      background: linear-gradient(-45deg, hsl(220, 20%, 8%), hsl(220, 16%, 12%), hsl(211, 50%, 10%), hsl(190, 40%, 10%));
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -144,8 +159,20 @@
   }
 
   .card-elevated {
-    @apply bg-card rounded-2xl border border-border/60;
+    @apply rounded-2xl border border-border/40;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .dark .card-elevated {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  
+  .card-elevated:hover {
+      box-shadow: var(--shadow-lg);
   }
 
   .stat-card {

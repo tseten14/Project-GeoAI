@@ -6,7 +6,7 @@ import { CoordinateInput } from '@/components/CoordinateInput';
 import { MapView } from '@/components/MapView';
 import { PipelineStatus } from '@/components/PipelineStatus';
 import { AnalysisDashboard } from '@/components/AnalysisDashboard';
-import { analyzeTraffic, TrafficAnalysis, AnalysisMetadata, POIMarker } from '@/lib/api/traffic';
+import { analyzeTraffic, TrafficAnalysis, AnalysisMetadata, POIMarker, RouteData } from '@/lib/api/traffic';
 import { AlertCircle, Map as MapIcon, Route } from 'lucide-react';
 
 import { useSearchParams } from 'react-router-dom';
@@ -33,8 +33,9 @@ export default function Index() {
   const [metadata, setMetadata] = useState<AnalysisMetadata | null>(null);
   
   // New Visual Data State
-  const [routeGeometry, setRouteGeometry] = useState<[number, number][] | null>(null);
+  const [routes, setRoutes] = useState<RouteData[] | null>(null);
   const [poiMarkers, setPoiMarkers] = useState<POIMarker[]>([]);
+  const [poiDisplayMode, setPoiDisplayMode] = useState<'heatmap' | 'points'>('heatmap');
 
   // We use a ref so we only auto-analyze once on mount
   const hasAutoAnalyzed = useRef(false);
@@ -43,7 +44,7 @@ export default function Index() {
     setIsLoading(true);
     setAnalysis(null);
     setMetadata(null);
-    setRouteGeometry(null);
+    setRoutes(null);
     setPoiMarkers([]);
     setCenter([lat, lon]);
     if (radiusMiles) setRadius(radiusMiles);
@@ -68,7 +69,7 @@ export default function Index() {
         setMetadata(response.metadata);
         
         if (response.visualData) {
-          if (response.visualData.routeCoordinates) setRouteGeometry(response.visualData.routeCoordinates);
+          if (response.visualData.routes) setRoutes(response.visualData.routes);
           if (response.visualData.poiMarkers) setPoiMarkers(response.visualData.poiMarkers);
         }
         
@@ -114,7 +115,12 @@ export default function Index() {
       <main className="container mx-auto px-4 py-6 relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Left Sidebar - Input & Pipeline */}
-          <div className="lg:col-span-4 space-y-5">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="lg:col-span-4 space-y-5"
+          >
             <CoordinateInput
               onSubmit={handleAnalyze}
               isLoading={isLoading}
@@ -128,14 +134,15 @@ export default function Index() {
                 <PipelineStatus stage={pipelineStage} />
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
 
           {/* Main Content - Map & Results */}
           <div className="lg:col-span-8 space-y-5">
             {/* Map Section */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
               className="card-elevated overflow-hidden"
             >
               <div className="p-4 border-b border-border/50 flex items-center justify-between">
@@ -159,16 +166,43 @@ export default function Index() {
                     </p>
                   </div>
                 </div>
+                
+                {/* Visual Toggle */}
+                {poiMarkers && poiMarkers.length > 0 && (
+                  <div className="flex bg-secondary/80 backdrop-blur-sm p-1 rounded-lg border border-border/50">
+                    <button
+                      onClick={() => setPoiDisplayMode('heatmap')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                        poiDisplayMode === 'heatmap' 
+                          ? 'bg-background shadow-sm text-foreground' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Heatmap
+                    </button>
+                    <button
+                      onClick={() => setPoiDisplayMode('points')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                        poiDisplayMode === 'points' 
+                          ? 'bg-background shadow-sm text-foreground' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Points
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="h-[380px]">
                 <MapView
                   center={center}
                   radiusMiles={radius}
                   onMapClick={handleMapClick}
-                  routeGeometry={routeGeometry}
+                  routes={routes}
                   poiMarkers={poiMarkers}
                   isRouteMode={metadata?.isRouteMode || false}
                   destination={metadata?.destination ? [metadata.destination.lat, metadata.destination.lon] : undefined}
+                  poiDisplayMode={poiDisplayMode}
                 />
               </div>
             </motion.div>
@@ -176,7 +210,7 @@ export default function Index() {
             {/* Results Section */}
             <AnimatePresence mode="wait">
               {analysis && metadata ? (
-                <AnalysisDashboard analysis={analysis} metadata={metadata} />
+                <AnalysisDashboard analysis={analysis} metadata={metadata} routes={routes} />
               ) : !isLoading && pipelineStage === 'idle' ? (
                 <motion.div
                   initial={{ opacity: 0 }}

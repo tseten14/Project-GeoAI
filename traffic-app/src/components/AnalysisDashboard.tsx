@@ -10,15 +10,16 @@ import {
   Clock,
   Route
 } from 'lucide-react';
-import { TrafficAnalysis, AnalysisMetadata } from '@/lib/api/traffic';
+import { TrafficAnalysis, AnalysisMetadata, RouteData } from '@/lib/api/traffic';
 
 interface AnalysisDashboardProps {
   analysis: TrafficAnalysis;
   metadata: AnalysisMetadata;
+  routes?: RouteData[] | null;
 }
 
 export const AnalysisDashboard = forwardRef<HTMLDivElement, AnalysisDashboardProps>(
-  ({ analysis, metadata }, ref) => {
+  ({ analysis, metadata, routes }, ref) => {
 
     const getCongestionColor = (score: number) => {
       if (score >= 70) return 'text-destructive';
@@ -73,12 +74,22 @@ export const AnalysisDashboard = forwardRef<HTMLDivElement, AnalysisDashboardPro
                 {metadata.elementsProcessed.toLocaleString()} infrastructure elements analyzed
               </p>
             </div>
-            
             {/* Route Duration Badge (If Route Mode) */}
             {metadata.isRouteMode && metadata.routeDurationEstimateStr && (
-              <div className="flex items-center gap-2 bg-secondary/80 px-4 py-2 rounded-lg border border-border/50">
-                <Route className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Est. Drive: {metadata.routeDurationEstimateStr}</span>
+              <div className="flex flex-col items-end gap-2 text-right">
+                <div className="flex items-center gap-2 bg-secondary/80 px-4 py-2 rounded-lg border border-border/50">
+                  <Route className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Fastest Drive: {metadata.routeDurationEstimateStr}</span>
+                </div>
+                {routes && routes.length > 1 && (
+                  <div className="flex flex-col items-end gap-1">
+                    {routes.slice(1).map((r, i) => (
+                      <span key={i} className="text-xs text-muted-foreground mr-1">
+                        Alt Route {i + 1}: {Math.round(r.durationSeconds / 60)} minutes
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -88,10 +99,11 @@ export const AnalysisDashboard = forwardRef<HTMLDivElement, AnalysisDashboardPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Traffic Signals */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="card-elevated p-5 flex flex-col justify-center border-l-4 border-geo-orange"
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+            className="card-elevated p-5 flex flex-col justify-center border-l-4 border-geo-orange cursor-default"
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 rounded-xl bg-geo-orange/10">
@@ -104,10 +116,11 @@ export const AnalysisDashboard = forwardRef<HTMLDivElement, AnalysisDashboardPro
 
           {/* Time Multiplier Impact */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="card-elevated p-5 flex flex-col justify-center border-l-4 border-primary"
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+            className="card-elevated p-5 flex flex-col justify-center border-l-4 border-primary cursor-default"
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 rounded-xl bg-primary/10">
@@ -126,11 +139,17 @@ export const AnalysisDashboard = forwardRef<HTMLDivElement, AnalysisDashboardPro
 
         {/* Main Traffic Congestion Card */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="card-elevated p-6 bg-gradient-to-br from-card to-secondary/30"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.3 }}
+          className="card-elevated p-6 bg-gradient-to-br from-card to-secondary/30 relative overflow-hidden"
         >
+          {/* Subtle background glow based on congestion score */}
+          <div 
+             className={`absolute -right-20 -top-20 w-40 h-40 rounded-full blur-3xl opacity-20 ${getCongestionBarColor(analysis.congestionScore)}`}
+             style={{ pointerEvents: 'none' }}
+          />
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-4">
               <div className={`p-3 rounded-2xl ${getCongestionBgColor(analysis.congestionScore)}`}>
@@ -181,9 +200,9 @@ export const AnalysisDashboard = forwardRef<HTMLDivElement, AnalysisDashboardPro
 
         {/* Metadata Footer */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
           className="text-xs text-muted-foreground font-mono p-4 rounded-xl bg-secondary/30 border border-border/40"
         >
           <div className="flex flex-wrap gap-x-6 gap-y-1.5 font-light">
